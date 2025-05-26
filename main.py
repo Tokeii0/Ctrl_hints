@@ -61,8 +61,8 @@ def main():
     # 设置应用程序信息
     app.setApplicationName("Ctrl快捷键提示工具")
     app.setApplicationVersion("1.0.0")
-    app.setOrganizationName("Assistant")
-    app.setOrganizationDomain("github.com")
+    app.setOrganizationName("Tokeii")
+    app.setOrganizationDomain("github.com/Tokeii0")
     
     # 正确处理高DPI
     if hasattr(app, 'setHighDpiScaleFactorRoundingPolicy'):

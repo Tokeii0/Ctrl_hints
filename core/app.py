@@ -71,6 +71,7 @@ class CtrlHintApp:
         # 连接键盘监听器信号
         self.keyboard_listener.key_pressed.connect(self._on_key_pressed)
         self.keyboard_listener.key_released.connect(self._on_key_released)
+        self.keyboard_listener.specific_key_pressed.connect(self._on_specific_key_pressed)
         
         # 连接托盘管理器信号
         self.tray_manager.settings_requested.connect(self._show_settings)
@@ -111,6 +112,25 @@ class CtrlHintApp:
                 
         except Exception as e:
             print(f"处理按键释放事件时出错: {e}")
+
+    @Slot(str, str)
+    def _on_specific_key_pressed(self, modifier_type: str, key_char: str):
+        """
+        处理具体按键按下事件，触发对应卡片的动画
+        
+        Args:
+            modifier_type: 修饰键类型 ("ctrl", "alt", "ctrl_alt", "win")
+            key_char: 按键字符
+        """
+        try:
+            # 如果当前有对应的窗口显示，触发动画
+            if self.current_visible_window == modifier_type:
+                if modifier_type in self.hint_windows:
+                    self.hint_windows[modifier_type].trigger_key_animation(key_char)
+                    print(f"触发动画: {modifier_type} + {key_char}")
+                    
+        except Exception as e:
+            print(f"处理具体按键事件时出错: {e}")
 
     def _is_related_key(self, window_type: str, key_type: str) -> bool:
         """

@@ -27,6 +27,10 @@
     {
       "key": "G",
       "action": "替换"
+    },
+    {
+      "key": "S",
+      "action": "保存"
     }
   ],
   "alt_shortcuts": [
@@ -41,6 +45,10 @@
     {
       "key": "Enter",
       "action": "属性"
+    },
+    {
+      "key": "A",
+      "action": "微信截图"
     }
   ],
   "ctrl_alt_shortcuts": [
@@ -112,14 +120,14 @@
     }
   ],
   "appearance": {
-    "card_size": 80,
-    "key_font_size": 20,
-    "action_font_size": 9,
-    "background_opacity": 30,
-    "key_color": "#333333",
-    "action_color": "#666666",
-    "card_bg_color_start": "#f8f9fa",
-    "card_bg_color_end": "#e9ecef"
+    "card_size": 90,
+    "key_font_size": 24,
+    "action_font_size": 10,
+    "background_opacity": 70,
+    "key_color": "#ffffff",
+    "action_color": "#f3e5f5",
+    "card_bg_color_start": "#9c27b0",
+    "card_bg_color_end": "#4a148c"
   },
   "effects": {
     "enable_animation": true,

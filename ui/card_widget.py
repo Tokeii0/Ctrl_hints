@@ -3,8 +3,10 @@
 """
 
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QSizePolicy, QGraphicsDropShadowEffect
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QFont
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer, QSequentialAnimationGroup, QParallelAnimationGroup, QPointF
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QFont, QBrush, QPen, QRadialGradient
+import math
+import random
 
 # 使用绝对导入避免相对导入问题
 import sys
@@ -16,6 +18,64 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from utils.config import get_appearance
+
+
+class Particle:
+    """粒子类 - 用于烟花效果"""
+    
+    def __init__(self, x, y, vx, vy, color, size=3, life=1.0):
+        self.x = x
+        self.y = y
+        self.vx = vx  # x方向速度
+        self.vy = vy  # y方向速度
+        self.color = color
+        self.size = size
+        self.life = life  # 生命值 (0-1)
+        self.max_life = life
+        self.gravity = 0.3  # 重力
+        self.fade_speed = 0.02  # 淡出速度
+    
+    def update(self):
+        """更新粒子状态"""
+        # 更新位置
+        self.x += self.vx
+        self.y += self.vy
+        
+        # 应用重力
+        self.vy += self.gravity
+        
+        # 减少生命值
+        self.life -= self.fade_speed
+        
+        # 减少速度（空气阻力）
+        self.vx *= 0.98
+        self.vy *= 0.98
+        
+        return self.life > 0
+    
+    def draw(self, painter):
+        """绘制粒子"""
+        if self.life <= 0:
+            return
+            
+        # 根据生命值调整透明度和大小
+        alpha = max(0, min(255, int(255 * self.life)))  # 确保alpha在0-255范围内
+        current_size = max(0.1, self.size * self.life)  # 确保大小不为0
+        
+        # 创建渐变效果
+        gradient = QRadialGradient(self.x, self.y, current_size)
+        color_with_alpha = QColor(self.color)
+        color_with_alpha.setAlpha(alpha)
+        gradient.setColorAt(0, color_with_alpha)
+        
+        transparent = QColor(self.color)
+        transparent.setAlpha(0)
+        gradient.setColorAt(1, transparent)
+        
+        painter.setBrush(QBrush(gradient))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(int(self.x - current_size/2), int(self.y - current_size/2), 
+                          int(current_size), int(current_size))
 
 
 class ShortcutCardWidget(QWidget):
@@ -47,6 +107,7 @@ class ShortcutCardWidget(QWidget):
         self._setup_layout(key_char, action_name)
         self._setup_shadow_effect()
         self._apply_appearance_style()
+        self._setup_animations()
 
     def _setup_layout(self, key_char: str, action_name: str):
         """设置布局和子组件"""
@@ -120,21 +181,63 @@ class ShortcutCardWidget(QWidget):
 
     def _setup_shadow_effect(self):
         """设置阴影效果"""
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(25)  # 增加模糊半径，更柔和
-        shadow.setColor(QColor(0, 0, 0, 80))  # 降低阴影不透明度，更柔和
-        shadow.setOffset(2, 4)  # 调整偏移，更自然
-        self.setGraphicsEffect(shadow)
+        try:
+            # 进一步简化阴影效果，减少渲染负担
+            shadow = QGraphicsDropShadowEffect(self)
+            shadow.setBlurRadius(10)  # 大幅减少模糊半径
+            shadow.setColor(QColor(0, 0, 0, 30))  # 大幅降低不透明度
+            shadow.setOffset(0, 1)  # 最小偏移
+            self.setGraphicsEffect(shadow)
+        except Exception as e:
+            # 如果阴影设置失败，完全禁用阴影
+            self.setGraphicsEffect(None)
+            print(f"阴影效果已禁用: {e}")
+    
+    def _setup_animations(self):
+        """设置动画效果"""
+        # 粒子系统
+        self.particles = []
+        self.firework_timer = QTimer()
+        self.firework_timer.timeout.connect(self._update_particles)
+        
+        # 烟花颜色列表 - 使用中国风配色
+        self.firework_colors = [
+            QColor(255, 215, 0),    # 金色
+            QColor(255, 69, 0),     # 橙红色
+            QColor(255, 20, 147),   # 深粉色
+            QColor(138, 43, 226),   # 蓝紫色
+            QColor(0, 191, 255),    # 深天蓝
+            QColor(50, 205, 50),    # 酸橙绿
+            QColor(255, 105, 180),  # 热粉色
+            QColor(255, 140, 0),    # 深橙色
+        ]
+        
+        # 动画状态
+        self.animation_state = "normal"  # normal, fireworks
 
     def paintEvent(self, event):
         """自定义绘制以确保圆角背景被正确应用"""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        path = QPainterPath()
-        # 使用self.rect()减去一点边距，如果阴影在外部绘制的话
-        path.addRoundedRect(self.rect(), 12, 12)  # 匹配QSS中的圆角大小
-        painter.setClipPath(path)
-        super().paintEvent(event)  # 确保子组件被绘制
+        try:
+            # 绘制基础样式
+            super().paintEvent(event)
+            
+            # 绘制粒子效果
+            if self.particles:
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                
+                for particle in self.particles:
+                    particle.draw(painter)
+                
+                painter.end()
+                
+        except (KeyboardInterrupt, SystemExit):
+            # 允许正常的程序退出
+            raise
+        except Exception as e:
+            # 捕获所有其他异常，避免绘制错误导致程序崩溃
+            print(f"绘制错误（已忽略）: {e}")
+            # 不重新抛出异常，让程序继续运行
 
     def update_content(self, key_char: str, action_name: str):
         """
@@ -147,19 +250,112 @@ class ShortcutCardWidget(QWidget):
         self.key_label.setText(key_char)
         self.action_label.setText(action_name)
 
-    def set_highlighted(self, highlighted: bool):
+    def _create_firework(self, x, y, color):
+        """创建烟花爆炸效果"""
+        particle_count = random.randint(15, 25)  # 随机粒子数量
+        
+        for _ in range(particle_count):
+            # 随机角度和速度
+            angle = random.uniform(0, 2 * math.pi)
+            speed = random.uniform(3, 8)
+            
+            # 计算速度分量
+            vx = math.cos(angle) * speed
+            vy = math.sin(angle) * speed
+            
+            # 随机粒子大小和生命值
+            size = random.uniform(2, 5)
+            life = random.uniform(0.8, 1.2)
+            
+            # 创建粒子
+            particle = Particle(x, y, vx, vy, color, size, life)
+            self.particles.append(particle)
+    
+    def _update_particles(self):
+        """更新粒子状态"""
+        try:
+            # 更新所有粒子
+            self.particles = [p for p in self.particles if p.update()]
+            
+            # 如果没有粒子了，停止动画
+            if not self.particles:
+                self.firework_timer.stop()
+                self.animation_state = "normal"
+                print("✨ 烟花动画结束")
+            
+            # 重绘组件
+            self.update()
+            
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as e:
+            print(f"粒子更新错误（已忽略）: {e}")
+            # 清理粒子，停止动画
+            self.particles.clear()
+            self.firework_timer.stop()
+            self.animation_state = "normal"
+    
+    def trigger_animation(self):
+        """触发烟花动画效果"""
+        try:
+            print(f"🎆 触发烟花动画: {self.key_label.text()} 键")
+            
+            # 停止之前的动画（如果正在运行）
+            if self.firework_timer.isActive():
+                self.firework_timer.stop()
+            
+            # 清理之前的粒子
+            self.particles.clear()
+            
+            # 设置动画状态
+            self.animation_state = "fireworks"
+            
+            # 获取卡片中心位置
+            center_x = self.width() // 2
+            center_y = self.height() // 2
+            
+            # 创建多个烟花爆炸点
+            explosion_points = [
+                (center_x, center_y),  # 中心
+                (center_x - 20, center_y - 15),  # 左上
+                (center_x + 20, center_y - 15),  # 右上
+                (center_x, center_y + 20),  # 下方
+            ]
+            
+            # 为每个爆炸点创建烟花，使用不同颜色
+            for i, (x, y) in enumerate(explosion_points):
+                color = self.firework_colors[i % len(self.firework_colors)]
+                # 延迟创建，形成连续爆炸效果
+                QTimer.singleShot(i * 150, lambda x=x, y=y, c=color: self._create_firework(x, y, c))
+            
+            # 启动粒子更新定时器（30fps）
+            self.firework_timer.start(33)
+            
+        except (KeyboardInterrupt, SystemExit):
+            # 允许正常的程序退出
+            raise
+        except Exception as e:
+            # 捕获动画触发过程中的异常
+            print(f"烟花动画触发错误（已忽略）: {e}")
+            # 尝试恢复到正常状态
+            try:
+                self.particles.clear()
+                self.firework_timer.stop()
+                self.animation_state = "normal"
+            except:
+                pass
+    
+    def matches_key(self, key_char: str) -> bool:
         """
-        设置卡片高亮状态
+        检查是否匹配指定的按键
         
         Args:
-            highlighted: 是否高亮
+            key_char: 要匹配的按键字符
+            
+        Returns:
+            bool: 匹配返回True，否则返回False
         """
-        if highlighted:
-            self.setProperty("highlighted", True)
-        else:
-            self.setProperty("highlighted", False)
-        self.style().unpolish(self)
-        self.style().polish(self)
+        return self.key_label.text().upper() == key_char.upper()
     
     def update_appearance(self):
         """更新外观设置"""

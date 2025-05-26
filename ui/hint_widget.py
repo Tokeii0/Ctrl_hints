@@ -149,14 +149,21 @@ class HintWidget(QWidget):
         """创建快捷键卡片"""
         self._clear_cards()
         
+        # 存储卡片引用，用于动画触发
+        self.cards = []
+        
         for item_data in self.shortcut_items:
             card = ShortcutCardWidget(item_data["key"], item_data["action"])
             self.layout.addWidget(card)
+            self.cards.append(card)
         
         self.adjustSize()  # 根据内容调整窗口大小
 
     def _clear_cards(self):
         """清除所有卡片"""
+        # 清空卡片引用
+        self.cards = []
+        
         for i in reversed(range(self.layout.count())): 
             item = self.layout.itemAt(i)
             if item:
@@ -245,6 +252,19 @@ class HintWidget(QWidget):
             int: 卡片数量
         """
         return len(self.shortcut_items)
+    
+    def trigger_key_animation(self, key_char: str):
+        """
+        触发指定按键的动画效果
+        
+        Args:
+            key_char: 按键字符
+        """
+        if hasattr(self, 'cards'):
+            for card in self.cards:
+                if card.matches_key(key_char):
+                    card.trigger_animation()
+                    break
     
     def update_appearance(self):
         """更新所有卡片的外观"""

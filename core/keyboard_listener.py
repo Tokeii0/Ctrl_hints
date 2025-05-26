@@ -13,6 +13,7 @@ class KeyboardListener(QObject):
     # 定义信号
     key_pressed = Signal(str)    # 按键按下信号，参数为按键类型
     key_released = Signal(str)   # 按键释放信号，参数为按键类型
+    specific_key_pressed = Signal(str, str)  # 具体按键按下信号，参数为(修饰键类型, 按键字符)
     
     def __init__(self):
         super().__init__()
@@ -82,9 +83,28 @@ class KeyboardListener(QObject):
                 self.key_states["win"] = True
                 # 发出Win键信号
                 self.key_pressed.emit("win")
+            
+            # 检测其他按键（在修饰键按下时）
+            else:
+                # 获取按键字符
+                key_char = self._get_key_char(key)
+                
+                if key_char:
+                    # 检查当前按下的修饰键状态
+                    if self.key_states["ctrl"] and self.key_states["alt"]:
+                        self.specific_key_pressed.emit("ctrl_alt", key_char)
+                    elif self.key_states["ctrl"]:
+                        self.specific_key_pressed.emit("ctrl", key_char)
+                    elif self.key_states["alt"]:
+                        self.specific_key_pressed.emit("alt", key_char)
+                    elif self.key_states["win"]:
+                        self.specific_key_pressed.emit("win", key_char)
         
+        except (KeyboardInterrupt, SystemExit):
+            # 允许正常的程序退出信号
+            raise
         except Exception as e:
-            print(f"键盘按下事件处理错误: {e}")
+            print(f"键盘按下事件处理错误（已忽略）: {e}")
         finally:
             self.key_lock = False
 
@@ -125,8 +145,11 @@ class KeyboardListener(QObject):
                     self.key_states["win"] = False
                     self.key_released.emit("win")
                         
+        except (KeyboardInterrupt, SystemExit):
+            # 允许正常的程序退出信号
+            raise
         except Exception as e:
-            print(f"键盘释放事件处理错误: {e}")
+            print(f"键盘释放事件处理错误（已忽略）: {e}")
         finally:
             self.key_lock = False
 
@@ -168,6 +191,72 @@ class KeyboardListener(QObject):
             "alt": bool(self.pressed_alt_keys),
             "win": bool(self.pressed_win_keys)
         }
+
+    def _get_key_char(self, key) -> str:
+        """
+        获取按键字符
+        
+        Args:
+            key: pynput按键对象
+            
+        Returns:
+            str: 按键字符，如果无法识别则返回None
+        """
+        try:
+            # 处理字母和数字键
+            if hasattr(key, 'char') and key.char:
+                char_code = ord(key.char)
+                
+                # 处理Ctrl+字母键的控制字符
+                if char_code >= 1 and char_code <= 26:
+                    # Ctrl+A=1, Ctrl+B=2, ..., Ctrl+Z=26
+                    result = chr(char_code + ord('A') - 1)
+                    return result
+                # 处理正常的可打印字符
+                elif key.char.isprintable() and len(key.char) == 1:
+                    return key.char.upper()
+                else:
+                    return None
+            
+            # 处理特殊键
+            special_keys = {
+                keyboard.Key.tab: "Tab",
+                keyboard.Key.enter: "Enter",
+                keyboard.Key.space: "Space",
+                keyboard.Key.backspace: "Backspace",
+                keyboard.Key.delete: "Del",
+                keyboard.Key.esc: "Esc",
+                keyboard.Key.f1: "F1",
+                keyboard.Key.f2: "F2",
+                keyboard.Key.f3: "F3",
+                keyboard.Key.f4: "F4",
+                keyboard.Key.f5: "F5",
+                keyboard.Key.f6: "F6",
+                keyboard.Key.f7: "F7",
+                keyboard.Key.f8: "F8",
+                keyboard.Key.f9: "F9",
+                keyboard.Key.f10: "F10",
+                keyboard.Key.f11: "F11",
+                keyboard.Key.f12: "F12",
+                keyboard.Key.left: "←",
+                keyboard.Key.right: "→",
+                keyboard.Key.up: "↑",
+                keyboard.Key.down: "↓",
+                keyboard.Key.home: "Home",
+                keyboard.Key.end: "End",
+                keyboard.Key.page_up: "PgUp",
+                keyboard.Key.page_down: "PgDn",
+                keyboard.Key.insert: "Ins",
+            }
+            
+            return special_keys.get(key, None)
+            
+        except (KeyboardInterrupt, SystemExit):
+            # 允许正常的程序退出信号
+            raise
+        except Exception as e:
+            print(f"获取按键字符时出错（已忽略）: {e}")
+            return None
 
     def reset_state(self):
         """重置所有按键状态"""

@@ -6,7 +6,7 @@
 # 使用方法
 `pip install -r requirements.txt `
 
-` python ctrl_hints.py `
+` python main.py `
 
 # big🥚
 ![image](https://github.com/user-attachments/assets/64bb4326-8677-4859-a9a7-86da6bd7c26a)
