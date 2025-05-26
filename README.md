@@ -1,17 +1,160 @@
-# Ctrl 键快捷键提示工具
-按下ctrl之后键盘上没有提示的解决方案(
+# Ctrl快捷键提示工具
 
+一个美观实用的Windows快捷键提示工具，支持完全自定义的外观设置。
 
-![image](https://github.com/user-attachments/assets/4701db1b-95a6-4bea-ad1d-a579850ab210)
+## ✨ 功能特点
 
-# 使用方法
-`pip install -r requirements.txt `
+### 🎯 核心功能
+- **智能快捷键提示**: 按住 Ctrl、Alt、Win 键时自动显示相关快捷键
+- **多组合键支持**: 支持 Ctrl、Alt、Ctrl+Alt、Win 键组合
+- **系统托盘运行**: 后台运行，不占用任务栏空间
+- **配置持久化**: 所有设置自动保存到配置文件
 
-` python ctrl_hints.py `
+### 🎨 外观自定义
+- **卡片尺寸**: 60-150px 可调节卡片大小
+- **字体设置**: 
+  - 按键字体大小 (12-48px)
+  - 动作字体大小 (8-24px)
+- **颜色主题**: 
+  - 8种内置样式预设（默认、深色、蓝色、绿色、紫色、橙色、简约、大字体）
+  - 按键文字颜色自定义
+  - 动作文字颜色自定义
+  - 卡片背景渐变色自定义
+  - 实时预览功能
+- **透明度控制**: 10-100% 背景透明度调节
+- **动画效果**: 
+  - 开关动画效果
+  - 动画速度调节 (慢/中等/快)
+  - 模糊效果开关
 
-# big🥚
-![image](https://github.com/user-attachments/assets/64bb4326-8677-4859-a9a7-86da6bd7c26a)
-![image](https://github.com/user-attachments/assets/7a70c3a5-df3f-4dff-bd1f-49f2f827b54c)
-![image](https://github.com/user-attachments/assets/14869b1c-255c-4922-9f12-eb8caa553e17)
-![image](https://github.com/user-attachments/assets/8b018e66-3bf0-4e3c-8d34-3a8f0ef4a51b)
+## 🚀 快速开始
 
+### 安装依赖
+```bash
+pip install -r requirements.txt
+```
+
+### 运行程序
+```bash
+python main.py
+```
+
+## 📖 使用说明
+
+### 基本操作
+1. **启动程序**: 运行 `main.py`，程序将在系统托盘中运行
+2. **查看提示**: 按住 Ctrl、Alt 或 Win 键即可看到快捷键提示
+3. **访问设置**: 右键点击托盘图标，选择"设置"
+4. **退出程序**: 右键点击托盘图标，选择"退出"
+
+### 自定义快捷键
+1. 打开设置对话框
+2. 在对应的标签页中编辑快捷键
+3. 点击"添加"按钮新增快捷键
+4. 点击"删除"按钮移除选中的快捷键
+5. 点击"保存"应用更改
+
+### 外观设置
+1. 打开设置对话框，切换到"外观设置"标签页
+2. **样式预设**: 
+   - 从下拉菜单选择预设主题（默认、深色、蓝色、绿色等）
+   - 点击"预览"按钮查看效果（3秒自动关闭）
+3. **自定义设置**:
+   - **卡片尺寸**: 使用数字输入框调整卡片大小
+   - **字体设置**: 分别调整按键和动作的字体大小
+   - **颜色设置**: 点击颜色按钮打开颜色选择器
+   - **透明度**: 使用滑块调整背景透明度
+   - **动画效果**: 勾选复选框开启/关闭动画和模糊效果
+4. 点击"保存"应用所有更改（立即生效，无需重启）
+
+## 🔧 配置文件
+
+程序使用 `config.json` 文件保存所有配置：
+
+```json
+{
+  "shortcuts": [
+    {"key": "C", "action": "复制"},
+    {"key": "V", "action": "粘贴"}
+  ],
+  "appearance": {
+    "card_size": 90,
+    "key_font_size": 24,
+    "action_font_size": 10,
+    "background_opacity": 50,
+    "key_color": "#1a1a1e",
+    "action_color": "#1e1e28",
+    "card_bg_color_start": "#ffffff",
+    "card_bg_color_end": "#f0f0fa"
+  },
+  "effects": {
+    "enable_animation": true,
+    "enable_blur": true,
+    "animation_speed": "medium"
+  }
+}
+```
+
+## 🏗️ 项目结构
+
+```
+ctrl_hints/
+├── main.py                    # 程序入口
+├── core/                      # 核心模块
+│   ├── app.py                # 主应用程序
+│   ├── keyboard_listener.py  # 键盘监听
+│   └── tray_manager.py       # 系统托盘
+├── ui/                       # 用户界面
+│   ├── hint_widget.py        # 提示窗口
+│   ├── card_widget.py        # 快捷键卡片
+│   ├── settings_dialog.py    # 设置对话框
+│   └── color_button.py       # 颜色选择按钮
+├── utils/                    # 工具模块
+│   ├── config.py             # 配置管理
+│   └── constants.py          # 常量定义
+├── resources/                # 资源文件
+│   └── styles.qss            # 样式表
+└── config.json              # 配置文件
+```
+
+## 🛠️ 开发说明
+
+### 技术栈
+- **GUI框架**: PySide6 (Qt6)
+- **键盘监听**: pynput
+- **配置管理**: JSON
+- **样式设计**: QSS (Qt Style Sheets)
+
+### 添加新快捷键类型
+1. 在 `utils/constants.py` 中添加默认配置
+2. 在 `core/keyboard_listener.py` 中添加按键检测
+3. 在 `core/app.py` 中添加窗口管理逻辑
+4. 在 `ui/settings_dialog.py` 中添加设置界面
+
+### 自定义外观
+- 修改 `config.json` 中的 `appearance` 部分
+- 或通过设置对话框进行可视化配置
+- 支持实时预览和热更新
+
+## 🐛 故障排除
+
+### 常见问题
+1. **程序无法启动**: 检查是否安装了所有依赖
+2. **快捷键不显示**: 确认程序在系统托盘中运行
+3. **设置不保存**: 检查程序是否有写入权限
+4. **外观不生效**: 尝试重启程序应用新设置
+
+### 日志信息
+程序会在控制台输出运行状态信息，有助于诊断问题。
+
+## 📄 许可证
+
+MIT License - 详见 LICENSE 文件
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+---
+
+**享受更高效的快捷键使用体验！** 🎉

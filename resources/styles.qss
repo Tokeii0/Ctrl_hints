@@ -1,0 +1,51 @@
+/* styles.qss - 多个并排半透明卡片样式 */
+
+/* HintWidget 现在是透明容器，不需要特定样式，除非你想给整个容器组加边框等 */
+HintWidget {
+    /* background: transparent; */ /* 已经在Python代码中设置 */
+    /* border-radius: 10px; */ /* 如果容器需要圆角 */
+    /* padding: 5px; */ /* 容器内边距，卡片周围的额外空间 */
+}
+
+ShortcutCardWidget#ShortcutCard {
+    background-color: rgba(255, 255, 255, 120); /* 更透明的背景 */
+    border-radius: 12px;      /* 增大圆角，更现代 */
+    min-width: 90px;         /* 增大卡片宽度 */
+    max-width: 90px;         
+    min-height: 90px;        /* 增大卡片高度，保持正方形 */
+    max-height: 90px;        
+    padding: 8px;            /* 增加内部边距 */
+    border: 1px solid rgba(255, 255, 255, 80); /* 非常透明的边框 */
+    /* 毛玻璃效果的半透明渐变背景 */
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                               stop: 0 rgba(255, 255, 255, 140),
+                               stop: 0.5 rgba(250, 250, 255, 100),
+                               stop: 1 rgba(240, 240, 250, 120));
+}
+
+/* 鼠标悬停效果 */
+ShortcutCardWidget#ShortcutCard:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                               stop: 0 rgba(255, 255, 255, 160),
+                               stop: 0.5 rgba(250, 250, 255, 120),
+                               stop: 1 rgba(240, 240, 250, 140));
+    border: 1px solid rgba(255, 255, 255, 120);
+}
+
+ShortcutCardWidget#ShortcutCard QLabel#keyLabel {
+    color: rgba(20, 20, 30, 255); /* 保持文字清晰可读 */
+    font-size: 24px; /* 增大字体 */
+    font-weight: bold; 
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+
+ShortcutCardWidget#ShortcutCard QLabel#actionLabel {
+    color: rgba(30, 30, 40, 240); /* 调整文字颜色，保持可读性 */
+    font-size: 10px;  /* 稍微增大字体 */
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    /* word-wrap: break-word; */ /* QSS中通常不需要，QLabel的wordWrap属性已处理 */
+}

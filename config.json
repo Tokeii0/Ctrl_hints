@@ -1,36 +1,131 @@
 {
-    "shortcuts": [
-        {
-            "key": "Z",
-            "action": "撤销"
-        },
-        {
-            "key": "X",
-            "action": "剪切"
-        },
-        {
-            "key": "C",
-            "action": "复制"
-        },
-        {
-            "key": "V",
-            "action": "粘贴"
-        },
-        {
-            "key": "A",
-            "action": "全选"
-        },
-        {
-            "key": "F",
-            "action": "查找"
-        },
-        {
-            "key": "G",
-            "action": "替换"
-        },
-        {
-            "key": "ALT+Z",
-            "action": "打开QQ"
-        }
-    ]
+  "shortcuts": [
+    {
+      "key": "Z",
+      "action": "撤销"
+    },
+    {
+      "key": "X",
+      "action": "剪切"
+    },
+    {
+      "key": "C",
+      "action": "复制"
+    },
+    {
+      "key": "V",
+      "action": "粘贴"
+    },
+    {
+      "key": "A",
+      "action": "全选"
+    },
+    {
+      "key": "F",
+      "action": "查找"
+    },
+    {
+      "key": "G",
+      "action": "替换"
+    }
+  ],
+  "alt_shortcuts": [
+    {
+      "key": "Tab",
+      "action": "切换窗口"
+    },
+    {
+      "key": "F4",
+      "action": "关闭程序"
+    },
+    {
+      "key": "Enter",
+      "action": "属性"
+    }
+  ],
+  "ctrl_alt_shortcuts": [
+    {
+      "key": "Del",
+      "action": "任务管理器"
+    },
+    {
+      "key": "Tab",
+      "action": "切换窗口"
+    },
+    {
+      "key": "T",
+      "action": "日期时间"
+    },
+    {
+      "key": "D",
+      "action": "桌面"
+    },
+    {
+      "key": "Z",
+      "action": "打开QQ"
+    },
+    {
+      "key": "A",
+      "action": "QQ截图"
+    },
+    {
+      "key": "S",
+      "action": "QQ录制视频"
+    }
+  ],
+  "win_shortcuts": [
+    {
+      "key": "E",
+      "action": "文件资源管理器"
+    },
+    {
+      "key": "D",
+      "action": "显示桌面"
+    },
+    {
+      "key": "R",
+      "action": "运行"
+    },
+    {
+      "key": "L",
+      "action": "锁定电脑"
+    },
+    {
+      "key": "S",
+      "action": "搜索"
+    },
+    {
+      "key": "P",
+      "action": "投影设置"
+    },
+    {
+      "key": "Tab",
+      "action": "任务视图"
+    },
+    {
+      "key": "←",
+      "action": "左侧贴靠窗口"
+    },
+    {
+      "key": "→",
+      "action": "右侧贴靠窗口"
+    }
+  ],
+  "appearance": {
+    "card_size": 80,
+    "key_font_size": 20,
+    "action_font_size": 9,
+    "background_opacity": 30,
+    "key_color": "#333333",
+    "action_color": "#666666",
+    "card_bg_color_start": "#f8f9fa",
+    "card_bg_color_end": "#e9ecef"
+  },
+  "effects": {
+    "enable_animation": true,
+    "enable_blur": true,
+    "animation_speed": "medium",
+    "show_on_press": true,
+    "auto_hide": true
+  }
 }
