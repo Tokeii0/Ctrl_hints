@@ -1,42 +1,10 @@
 # Ctrl 键快捷键提示工具
+按下ctrl之后键盘上没有提示的解决方案(
 
-一个Python小工具，当按下Ctrl键时，它会显示常用的快捷键提示（如复制、粘贴、剪切、撤销）。提示信息会以一个小巧的悬浮窗形式出现在系统任务栏上方。
+![image](https://github.com/user-attachments/assets/4701db1b-95a6-4bea-ad1d-a579850ab210)
 
-## 功能特性
-
-- 当按下Ctrl键时显示提示。
-- 当释放Ctrl键时隐藏提示。
-- 提示内容包括：C (复制), V (粘贴), X (剪切), Z (撤销)。
-- 提示窗口无边框，总在最前，并且不会抢占当前焦点。
-
-## 环境要求
-
-- Python 3.x
-- PySide6
-- pynput
-
-## 安装步骤
-
-1.  克隆此仓库或下载项目文件。
-2.  安装所需的依赖包：
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## 如何使用
-
-运行 `ctrl_hints.py` 脚本：
-
-```bash
-python ctrl_hints.py
-```
-
-按住Ctrl键即可看到提示，松开Ctrl键提示消失。
-要关闭此应用，可以直接关闭运行脚本的终端窗口（例如，在终端中按 Ctrl+C），或通过系统的任务管理器结束进程。
-
-## 工作原理
-
--   **PySide6**: 用于创建图形用户界面（即提示窗口）。
--   **pynput**: 用于全局键盘事件监控，以侦测Ctrl键的按下与释放。
-
-应用程序会监听全局键盘事件。当任意一个Ctrl键（左或右）被按下时，一个经过样式设计的小窗口便会浮现。这个窗口展示了一系列基于Ctrl的常用快捷键。当所有Ctrl键都被释放后，该窗口便会消失。提示窗口被设计为不显眼且易用的，其位置通常在任务栏正上方（主要针对底部任务栏的配置进行了测试和优化）。
+# 
+![image](https://github.com/user-attachments/assets/64bb4326-8677-4859-a9a7-86da6bd7c26a)
+![image](https://github.com/user-attachments/assets/7a70c3a5-df3f-4dff-bd1f-49f2f827b54c)
+![image](https://github.com/user-attachments/assets/14869b1c-255c-4922-9f12-eb8caa553e17)
+![image](https://github.com/user-attachments/assets/8b018e66-3bf0-4e3c-8d34-3a8f0ef4a51b)
