@@ -1,20 +1,20 @@
 import sys
-from PySide6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy
+import os
+from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, 
+                             QGraphicsDropShadowEffect, QSizePolicy, QSystemTrayIcon, 
+                             QMenu, QMessageBox)
 from PySide6.QtCore import Qt, Signal, QObject, Slot, QPoint, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QScreen, QGuiApplication, QColor, QPainter, QPainterPath, QFont
+from PySide6.QtGui import QScreen, QGuiApplication, QColor, QPainter, QPainterPath, QFont, QIcon, QAction
+
+# 导入共享配置
+from config import DEFAULT_SHORTCUT_ITEMS, SHORTCUT_ITEMS, load_config, save_config
 
 from pynput import keyboard
 
-# 定义快捷键项目
-SHORTCUT_ITEMS = [
-    {"key": "Z", "action": "撤销"},
-    {"key": "X", "action": "剪切"},
-    {"key": "C", "action": "复制"},
-    {"key": "V", "action": "粘贴"},
-    {"key": "A", "action": "全选"},
-    {"key": "F", "action": "查找"},
-    {"key": "G", "action": "替换"}
-]
+# 在运行时导入设置模块
+def import_settings():
+    global SettingsDialog
+    from settings import SettingsDialog
 
 class KeyboardSignalEmitter(QObject):
     ctrl_pressed = Signal()
@@ -117,6 +117,10 @@ class HintWidget(QWidget):
         self.slide_out_animation.setDuration(200) # 增加持续时间
         self.slide_out_animation.setEasingCurve(QEasingCurve.Type.InQuad)
         
+        # 如果SHORTCUT_ITEMS为空，先加载配置
+        if not SHORTCUT_ITEMS:
+            load_config()
+            
         self.setup_ui()
 
     def setup_ui(self):
@@ -131,13 +135,57 @@ class HintWidget(QWidget):
 
     def load_stylesheet(self, filename):
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            # 处理PyInstaller打包后的路径
+            if hasattr(sys, '_MEIPASS'):
+                # 在打包的exe中，资源文件在临时目录中
+                style_path = os.path.join(sys._MEIPASS, filename)
+            else:
+                # 在开发环境中，使用相对路径
+                style_path = filename
+            
+            with open(style_path, "r", encoding="utf-8") as f:
                 style = f.read()
                 self.setStyleSheet(style)
         except FileNotFoundError:
             print(f"错误: 样式文件 '{filename}' 未找到。")
+            # 如果找不到样式文件，使用默认样式
+            self.apply_default_style()
         except Exception as e:
             print(f"加载样式文件时出错: {e}")
+            self.apply_default_style()
+    
+    def apply_default_style(self):
+        """应用默认样式，当样式文件不可用时使用"""
+        default_style = """
+        ShortcutCardWidget#ShortcutCard {
+            background-color: rgba(255, 255, 255, 120);
+            border-radius: 12px;
+            min-width: 90px;
+            max-width: 90px;
+            min-height: 90px;
+            max-height: 90px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 80);
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                       stop: 0 rgba(255, 255, 255, 140),
+                                       stop: 0.5 rgba(250, 250, 255, 100),
+                                       stop: 1 rgba(240, 240, 250, 120));
+        }
+        
+        ShortcutCardWidget#ShortcutCard QLabel#keyLabel {
+            color: rgba(20, 20, 30, 255);
+            font-size: 24px;
+            font-weight: bold;
+            background-color: transparent;
+        }
+        
+        ShortcutCardWidget#ShortcutCard QLabel#actionLabel {
+            color: rgba(30, 30, 40, 240);
+            font-size: 10px;
+            background-color: transparent;
+        }
+        """
+        self.setStyleSheet(default_style)
 
     # HintWidget的paintEvent可能不再需要，因为它现在是透明容器
     # 如果需要为整个容器区域绘制一个统一的圆角背景（在所有卡片之后），则可以保留并修改
@@ -180,6 +228,8 @@ class HintWidget(QWidget):
         self.slide_in_animation.setEndValue(final_pos)
         self.slide_in_animation.start() # 开始滑入动画
 
+
+
 class CtrlHintApp:
     def __init__(self):
         # 确保QApplication实例存在
@@ -187,6 +237,12 @@ class CtrlHintApp:
         if not self.app:
             self.app = QApplication(sys.argv)
 
+        # 加载配置
+        load_config()
+            
+        # 初始化托盘图标
+        self.setup_tray_icon()
+            
         self.hint_widget = HintWidget()
         self.keyboard_signal_emitter = KeyboardSignalEmitter()
 
@@ -201,6 +257,88 @@ class CtrlHintApp:
             on_press=self.on_key_press,
             on_release=self.on_key_release
         )
+        
+    def setup_tray_icon(self):
+        # 创建托盘图标
+        self.tray_icon = QSystemTrayIcon(self.load_icon(), self.app)
+        self.tray_icon.setToolTip("Ctrl快捷键提示工具")
+        
+        # 创建托盘菜单
+        tray_menu = QMenu()
+        
+        # 添加设置菜单项
+        settings_action = QAction("设置", self.app)
+        settings_action.triggered.connect(self.show_settings)
+        tray_menu.addAction(settings_action)
+        
+        # 添加退出菜单项
+        quit_action = QAction("退出", self.app)
+        quit_action.triggered.connect(self.quit_app)
+        tray_menu.addAction(quit_action)
+        
+        # 设置托盘菜单
+        self.tray_icon.setContextMenu(tray_menu)
+        
+        # 显示托盘图标
+        self.tray_icon.show()
+    
+    def load_icon(self):
+        # 处理PyInstaller打包后的路径
+        if hasattr(sys, '_MEIPASS'):
+            # 在打包的exe中，资源文件在临时目录中
+            icon_path = os.path.join(sys._MEIPASS, 'res', 'logo.png')
+        else:
+            # 在开发环境中，使用相对路径
+            icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', 'logo.png')
+        
+        if os.path.exists(icon_path):
+            return QIcon(icon_path)
+        else:
+            print(f"警告: 图标文件 '{icon_path}' 未找到。")
+            return QIcon() # 返回空图标
+    
+    def show_settings(self):
+        global SHORTCUT_ITEMS
+        
+        # 在使用时才导入SettingsDialog类，避免循环导入
+        import_settings()
+        
+        # 创建设置对话框
+        dialog = SettingsDialog(SHORTCUT_ITEMS)
+        
+        # 如果用户点击保存
+        if dialog.exec_():
+            # 获取新的快捷键设置
+            SHORTCUT_ITEMS = dialog.get_shortcuts()
+            
+            # 保存到配置文件
+            if save_config(SHORTCUT_ITEMS):
+                # 更新提示窗口内容而不是重新创建整个窗口
+                # 清除现有卡片
+                for i in reversed(range(self.hint_widget.layout.count())): 
+                    widget = self.hint_widget.layout.itemAt(i).widget()
+                    if widget:
+                        widget.setParent(None)
+                        widget.deleteLater()
+                
+                # 添加新卡片
+                for item_data in SHORTCUT_ITEMS:
+                    card = ShortcutCardWidget(item_data["key"], item_data["action"])
+                    self.hint_widget.layout.addWidget(card)
+                
+                # 调整窗口大小
+                self.hint_widget.adjustSize()
+            else:
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.warning(None, "保存失败", "保存设置时出错，请稍后再试。")
+    
+    def quit_app(self):
+        # 停止监听器
+        if hasattr(self, 'listener') and self.listener.running:
+            self.listener.stop()
+            self.listener.join()
+        # 退出应用
+        self.app.quit()
 
     def on_key_press(self, key):
         try:
@@ -235,11 +373,12 @@ class CtrlHintApp:
             current_pos = self.hint_widget.pos()
             end_pos_slide = QPoint(current_pos.x(), current_pos.y() + 30) # 向下滑出30px，增加距离
 
-            # 先断开之前的连接，避免重复隐藏或连接累积
+            # 断开所有连接，避免重复隐藏或连接累积
             try:
-                self.hint_widget.fade_out_animation.finished.disconnect()
-                self.hint_widget.slide_out_animation.finished.disconnect()
-            except RuntimeError: # 'disconnect' may fail if not connected
+                # 只断开连接到hide方法的信号
+                self.hint_widget.fade_out_animation.finished.disconnect(self.hint_widget.hide)
+            except (TypeError, RuntimeError):
+                # 如果尚未连接或出现其他错误，忽略
                 pass
 
             # 确保动画结束后隐藏窗口
@@ -254,8 +393,16 @@ class CtrlHintApp:
 
     def run(self):
         print("Ctrl快捷键提示工具已启动。按住Ctrl键查看提示。")
-        print("关闭此终端窗口或按Ctrl+C来退出程序。")
+        print("程序将在系统托盘中运行，右键点击托盘图标可以访问设置或退出程序。")
         self.listener.start()  # 在新线程中启动监听器
+        
+        # 显示托盘消息提示用户
+        self.tray_icon.showMessage(
+            "Ctrl快捷键提示工具",
+            "程序已启动并在后台运行。\n按住Ctrl键可以显示快捷键提示。\n右键点击托盘图标可以访问设置或退出程序。",
+            QSystemTrayIcon.MessageIcon.Information,
+            3000
+        )
         
         exit_code = self.app.exec()
         
@@ -265,9 +412,19 @@ class CtrlHintApp:
         sys.exit(exit_code)
 
 if __name__ == "__main__":
-    # 确保在高DPI屏幕上表现正常
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    # 高DPI支持，使用新的方式避免警告
+    # Qt 6.0+已经默认启用了高DPI缩放
+    if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
+        QApplication.setHighDpiScaleFactorRoundingPolicy(
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    
+    if hasattr(Qt, 'ApplicationAttribute'):
+        QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+        QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+    else:
+        # 兼容老版本Qt的写法
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
     main_app = CtrlHintApp()
     main_app.run()

@@ -1,0 +1,36 @@
+{
+    "shortcuts": [
+        {
+            "key": "Z",
+            "action": "撤销"
+        },
+        {
+            "key": "X",
+            "action": "剪切"
+        },
+        {
+            "key": "C",
+            "action": "复制"
+        },
+        {
+            "key": "V",
+            "action": "粘贴"
+        },
+        {
+            "key": "A",
+            "action": "全选"
+        },
+        {
+            "key": "F",
+            "action": "查找"
+        },
+        {
+            "key": "G",
+            "action": "替换"
+        },
+        {
+            "key": "ALT+Z",
+            "action": "打开QQ"
+        }
+    ]
+}
